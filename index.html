@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>AGÁRRATE · El juego de la montaña rusa</title>
+  <meta name="description" content="Dibuja la vía con el dedo y lleva el vagón hasta la meta. Un juego de montañas rusas para el móvil.">
+  <meta name="theme-color" content="#1e2433">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Agárrate">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Lilita+One&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <div id="safe-probe"></div>
+
+  <!-- ============ MENÚ ============ -->
+  <section id="scr-menu" class="screen">
+    <div class="menu-card">
+      <h1 class="logo">AGÁRRATE<span>el juego de la montaña rusa</span></h1>
+      <p class="tagline">Dibuja la vía con el dedo. Lleva el vagón hasta la meta, coge las estrellas… y que nadie vomite.</p>
+      <button id="btn-play" class="btn big go">▶ Jugar</button>
+      <div class="menu-row">
+        <button class="btn small" data-act="mute"><span class="ico-sound">🔊</span> Sonido</button>
+        <button class="btn small" data-act="howto">❓ Cómo se juega</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ NIVELES ============ -->
+  <section id="scr-levels" class="screen hidden">
+    <div class="levels-wrap">
+      <header class="levels-head">
+        <button class="btn icon" data-act="menu" aria-label="Volver">←</button>
+        <h2>Elige nivel</h2>
+        <div class="pill">⭐ <b id="total-stars">0</b> / <span id="max-stars">30</span></div>
+      </header>
+      <div id="level-grid"></div>
+    </div>
+  </section>
+
+  <!-- ============ HUD DEL JUEGO ============ -->
+  <section id="hud" class="hidden">
+    <div id="rail-left" class="rail">
+      <div id="tools" class="rail-group">
+        <button class="tool active" data-tool="track"><span>✏️</span><small>Vía</small></button>
+        <button class="tool" data-tool="boost" id="tool-boost"><span>⚡</span><small>Turbo</small></button>
+        <button class="tool" data-tool="erase"><span>🧽</span><small>Borrar</small></button>
+        <div class="sep"></div>
+        <button class="tool plain" data-act="undo"><span>↶</span><small>Deshacer</small></button>
+        <button class="tool plain" data-act="clear"><span>🗑️</span><small>Todo</small></button>
+      </div>
+      <div id="gauges" class="rail-group hidden">
+        <div class="gauge">
+          <b id="g-speed">0</b><small>km/h</small>
+        </div>
+        <div class="gauge">
+          <div class="vbar"><i id="g-gbar"></i><em></em></div>
+          <small id="g-gval">1.0 G</small>
+        </div>
+        <div class="gauge">
+          <span id="g-face">😀</span>
+          <div class="vbar susto"><i id="g-susto"></i></div>
+          <small>susto</small>
+        </div>
+      </div>
+    </div>
+
+    <div id="rail-right" class="rail">
+      <div class="rail-group">
+        <button class="tool plain" data-act="levels"><span>☰</span><small>Niveles</small></button>
+        <button class="tool plain" data-act="hint"><span>💡</span><small>Pista</small></button>
+        <button class="tool plain" data-act="mute"><span class="ico-sound">🔊</span><small>Sonido</small></button>
+      </div>
+      <button id="btn-run" class="run-btn"><span>▶</span><small>¡PROBAR!</small></button>
+    </div>
+
+    <div id="topinfo">
+      <div class="lvl-name"><b id="lvl-num">1</b><span id="lvl-title">Primer viaje</span></div>
+      <div class="budget">
+        <div class="bar"><i id="budget-fill"></i><i id="budget-prev"></i></div>
+        <span id="budget-text">Te quedan 50 m de vía</span>
+      </div>
+      <div class="stars-live" id="stars-live"><i>★</i><i>★</i><i>★</i></div>
+    </div>
+
+    <div id="toast"></div>
+  </section>
+
+  <!-- ============ VENTANA EMERGENTE ============ -->
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="card" id="modal-card"></div>
+  </div>
+
+  <!-- ============ GIRA EL MÓVIL ============ -->
+  <div id="rotate" class="hidden">
+    <div class="rotate-phone">📱</div>
+    <h3>Gira el móvil</h3>
+    <p>Se juega mucho mejor en horizontal.</p>
+    <button class="btn small" data-act="ignore-rotate">Jugar en vertical igualmente</button>
+  </div>
+
+  <script src="js/engine.js"></script>
+  <script src="js/levels.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
