@@ -1,147 +1,120 @@
 /* =========================================================
-   AGÁRRATE · Niveles
-   Mundo de 1600 x 900. El suelo está en y = 860.
-   start/goal: puntos de la estación de salida y de la meta.
-   obstacles: rock = roca (no se puede construir y si chocas, adiós)
-              zone = zona protegida (no se puede construir, pero se puede saltar)
+   AGÁRRATE 3D · Retos
+   Objetivos posibles (k):
+     speed  velocidad máxima ≥ v km/h      inv    vueltas boca abajo ≥ v
+     air    tiempo flotando ≥ v segundos   exc    emoción ≥ v
+     lat    fuerza lateral máxima ≤ v G     vert   fuerza vertical máxima ≤ v G
+     nausea mareo ≤ v                      turn   grados de curva ≥ v
+     height altura ≥ v m                   finish terminar el viaje
+   Para ganar estrellas el tren tiene que llegar a la meta sin que nadie vomite.
    ========================================================= */
-(function (root) {
-  'use strict';
 
-  const LEVELS = [
-    {
-      name: 'Primer viaje',
-      hint: 'Dibuja con el dedo una vía desde el final de la estación hasta la meta 🏁. Pasa por las estrellas.',
-      theme: 'day',
-      start: [[30, 250], [250, 250]],
-      goal: [[1320, 640], [1560, 640]],
-      startSpeed: 160,
-      budget: 2000,
-      stars: [[520, 400], [860, 560], [1160, 630]],
-      obstacles: []
-    },
-    {
-      name: 'Valle',
-      hint: 'La meta está casi a tu altura. Si bajas mucho, ¿llegarás a subir? La velocidad de bajada te empuja hacia arriba.',
-      theme: 'day',
-      start: [[30, 280], [250, 280]],
-      goal: [[1340, 360], [1570, 360]],
-      startSpeed: 200,
-      budget: 2100,
-      stars: [[540, 600], [800, 740], [1080, 560]],
-      obstacles: []
-    },
-    {
-      name: 'El barranco',
-      hint: 'En la zona roja no se puede construir. Haz una rampa y ¡salta! Para aterrizar bien, la vía del otro lado tiene que ir en la misma dirección que el vagón.',
-      theme: 'sunset',
-      start: [[30, 280], [250, 280]],
-      goal: [[1260, 560], [1560, 560]],
-      startSpeed: 180,
-      budget: 2000,
-      stars: [[470, 585], [770, 420], [1100, 550]],
-      obstacles: [{ type: 'zone', shape: 'rect', x: 640, y: 0, w: 260, h: 860 }]
-    },
-    {
-      name: 'El looping',
-      hint: 'Una estrella está muy arriba en medio del camino. Prueba a dibujar un looping. Ojo: si la curva es muy cerrada, las fuerzas G marean a los pasajeros.',
-      theme: 'day',
-      start: [[30, 200], [250, 200]],
-      goal: [[1320, 660], [1560, 660]],
-      startSpeed: 180,
-      budget: 2700,
-      stars: [[560, 620], [820, 330], [1100, 700]],
-      obstacles: []
-    },
-    {
-      name: 'Turbo',
-      hint: '¡Nueva pieza! El TURBO empuja el vagón en la dirección en la que la dibujas. Gasta el doble de vía.',
-      theme: 'sunset',
-      unlockBoost: true,
-      start: [[30, 640], [250, 640]],
-      goal: [[1290, 260], [1560, 260]],
-      startSpeed: 170,
-      budget: 2300,
-      stars: [[560, 700], [900, 480], [1140, 300]],
-      obstacles: []
-    },
-    {
-      name: 'El muro',
-      hint: 'Hay una roca enorme en medio. Por encima, por debajo no se puede... tú verás cómo.',
-      theme: 'day',
-      start: [[30, 420], [250, 420]],
-      goal: [[1300, 580], [1560, 580]],
-      startSpeed: 200,
-      budget: 2400,
-      stars: [[440, 640], [790, 240], [1120, 520]],
-      obstacles: [{ type: 'rock', shape: 'rect', x: 720, y: 330, w: 140, h: 530 }]
-    },
-    {
-      name: 'El túnel',
-      hint: 'Mete el vagón por el túnel sin rozar las rocas. Baja con cuidado: si caes muy rápido, la curva del fondo mareará a todos.',
-      theme: 'night',
-      start: [[30, 200], [250, 200]],
-      goal: [[1300, 660], [1560, 660]],
-      startSpeed: 160,
-      budget: 2300,
-      stars: [[640, 500], [940, 470], [1210, 600]],
-      obstacles: [
-        { type: 'rock', shape: 'rect', x: 520, y: 0, w: 560, h: 380 },
-        { type: 'rock', shape: 'rect', x: 520, y: 590, w: 560, h: 270 }
-      ]
-    },
-    {
-      name: 'Doble salto',
-      hint: 'Dos barrancos seguidos. Construye una isla en el medio para aterrizar y volver a despegar.',
-      theme: 'sunset',
-      start: [[30, 260], [250, 260]],
-      goal: [[1300, 600], [1560, 600]],
-      startSpeed: 200,
-      budget: 2100,
-      stars: [[565, 380], [900, 550], [1075, 470]],
-      obstacles: [
-        { type: 'zone', shape: 'rect', x: 480, y: 0, w: 170, h: 860 },
-        { type: 'zone', shape: 'rect', x: 990, y: 0, w: 170, h: 860 }
-      ]
-    },
-    {
-      name: 'Pedruscos',
-      hint: 'Rocas flotando por todas partes. Busca el hueco y no choques en el aire.',
-      theme: 'night',
-      unlockBoost: true,
-      start: [[30, 700], [250, 700]],
-      goal: [[1320, 300], [1560, 300]],
-      startSpeed: 180,
-      budget: 2500,
-      stars: [[520, 760], [820, 520], [1150, 340]],
-      obstacles: [
-        { type: 'rock', shape: 'circle', x: 640, y: 560, r: 90 },
-        { type: 'rock', shape: 'circle', x: 1000, y: 700, r: 110 },
-        { type: 'rock', shape: 'circle', x: 980, y: 260, r: 80 },
-        { type: 'rock', shape: 'circle', x: 360, y: 420, r: 70 }
-      ]
-    },
-    {
-      name: 'Gran final',
-      hint: 'Todo junto: turbo, salto y una estrella en lo alto. Si lo pasas con 3 estrellas, eres ingeniero de montañas rusas.',
-      theme: 'night',
-      unlockBoost: true,
-      start: [[30, 620], [250, 620]],
-      goal: [[1330, 500], [1570, 500]],
-      startSpeed: 180,
-      budget: 2700,
-      stars: [[480, 300], [880, 300], [1140, 310]],
-      obstacles: [
-        { type: 'rock', shape: 'rect', x: 340, y: 480, w: 120, h: 380 },
-        { type: 'zone', shape: 'rect', x: 960, y: 0, w: 200, h: 860 }
-      ]
-    }
-  ];
+export const LEVELS = [
+  {
+    name: 'Primera montaña',
+    intro: 'Activa la ⛓ cadena, sube la vía, déjate caer y termina con unos 🛑 frenos y la 🏁 meta.',
+    tip: 'Truco: con la cadena puesta, todas las piezas que añadas suben el tren solas.',
+    objectives: [{ k: 'finish' }, { k: 'speed', v: 60 }, { k: 'exc', v: 3.5 }]
+  },
+  {
+    name: 'Curvas con peralte',
+    intro: 'En una curva el tren empuja a la gente hacia fuera. El peralte inclina la vía hacia dentro para que no se estampen contra el lateral.',
+    tip: 'Con el peralte en AUTO el juego calcula la inclinación perfecta según la velocidad.',
+    objectives: [{ k: 'turn', v: 360 }, { k: 'lat', v: 1.0 }, { k: 'nausea', v: 2.5 }]
+  },
+  {
+    name: 'Tu primer looping',
+    intro: 'Un looping necesita velocidad: entra a unos 80–100 km/h. Si vas lento, el tren no llega arriba. Si vas muy rápido, la gente aguanta demasiadas G.',
+    tip: 'Antes del looping la vía tiene que estar plana: termina la bajada con piezas de "Subir".',
+    objectives: [{ k: 'inv', v: 1 }, { k: 'vert', v: 5 }, { k: 'exc', v: 5.5 }]
+  },
+  {
+    name: 'A toda pastilla',
+    intro: 'Cuanto más alta la caída, más velocidad. El turbo ⚡ también ayuda. Pero ojo con frenar a tiempo.',
+    tip: 'A mucha velocidad las curvas cerradas aplastan a la gente: usa curvas amplias o frenos.',
+    objectives: [{ k: 'speed', v: 90 }, { k: 'speed', v: 110 }, { k: 'speed', v: 125 }]
+  },
+  {
+    name: 'Flotando',
+    intro: 'El "airtime" es esa sensación de que te levantas del asiento al pasar por encima de una colina rápida.',
+    tip: 'Haz colinas: Subir, Subir, Bajar, Bajar… La parte de arriba de cada colina es donde se flota.',
+    objectives: [{ k: 'air', v: 1.5 }, { k: 'air', v: 3 }, { k: 'nausea', v: 4 }]
+  },
+  {
+    name: 'Patas arriba',
+    intro: 'Loopings y tirabuzones: cada uno es una vuelta boca abajo.',
+    tip: 'El tirabuzón no necesita tanta velocidad como el looping.',
+    objectives: [{ k: 'inv', v: 3 }, { k: 'inv', v: 5 }, { k: 'exc', v: 7 }]
+  },
+  {
+    name: 'Con poco dinero',
+    intro: 'Solo tienes 24 piezas. Haz la montaña rusa más emocionante que puedas con ellas.',
+    tip: 'Las piezas largas (looping, curvas amplias) dan mucho juego por una sola pieza.',
+    budget: 24,
+    objectives: [{ k: 'finish' }, { k: 'exc', v: 5 }, { k: 'exc', v: 6.2 }]
+  },
+  {
+    name: 'El bosque',
+    intro: 'Hay árboles por todas partes. Esquívalos y monta algo espectacular.',
+    tip: 'Si una pieza no cabe, el juego te enseña en rojo dónde chocaría.',
+    obstacles: [
+      { x: -14, z: 62, r: 4, h: 16 }, { x: 0, z: 70, r: 5, h: 18 }, { x: 14, z: 64, r: 4, h: 15 },
+      { x: 28, z: 74, r: 5, h: 17 }, { x: -28, z: 76, r: 5, h: 17 }, { x: 40, z: 40, r: 5, h: 16 },
+      { x: -40, z: 34, r: 5, h: 18 }, { x: 55, z: 90, r: 6, h: 19 }, { x: -55, z: 92, r: 6, h: 19 },
+      { x: 20, z: 110, r: 5, h: 16 }, { x: -20, z: 112, r: 5, h: 16 }, { x: 70, z: 30, r: 5, h: 15 }
+    ],
+    objectives: [{ k: 'finish' }, { k: 'inv', v: 2 }, { k: 'exc', v: 6.5 }]
+  }
+];
 
-  // El turbo se desbloquea a partir del nivel "Turbo"
-  const turboFrom = LEVELS.findIndex(l => l.unlockBoost);
-  LEVELS.forEach((l, i) => { l.boost = i >= turboFrom; });
+export function objectiveText(o) {
+  switch (o.k) {
+    case 'finish': return 'Llegar a la meta';
+    case 'speed': return `Llegar a ${o.v} km/h`;
+    case 'inv': return o.v === 1 ? 'Dar 1 vuelta boca abajo' : `Dar ${o.v} vueltas boca abajo`;
+    case 'air': return `Flotar ${String(o.v).replace('.', ',')} s en total`;
+    case 'exc': return `Emoción de ${String(o.v).replace('.', ',')} o más`;
+    case 'lat': return `Fuerza lateral máx. ${String(o.v).replace('.', ',')} G`;
+    case 'vert': return `Fuerza vertical máx. ${o.v} G`;
+    case 'nausea': return `Mareo de ${String(o.v).replace('.', ',')} o menos`;
+    case 'turn': return `Girar ${o.v}° en total`;
+    case 'height': return `Subir a ${o.v} m`;
+    default: return '?';
+  }
+}
 
-  if (typeof module !== 'undefined' && module.exports) module.exports = LEVELS;
-  else root.LEVELS = LEVELS;
-})(typeof window !== 'undefined' ? window : globalThis);
+// ¿Se cumple un objetivo? (res = resultado del viaje)
+export function objectiveMet(o, res) {
+  if (!res.ok) return false;
+  const s = res.stats, m = res.metrics, r = res.ratings;
+  switch (o.k) {
+    case 'finish': return true;
+    case 'speed': return s.maxV * 3.6 >= o.v;
+    case 'inv': return s.inversions >= o.v;
+    case 'air': return s.airtime >= o.v;
+    case 'exc': return r.excitement >= o.v;
+    case 'lat': return s.maxLat <= o.v;
+    case 'vert': return s.maxVert <= o.v;
+    case 'nausea': return r.nausea <= o.v;
+    case 'turn': return m.turn >= o.v;
+    case 'height': return m.maxY >= o.v;
+    default: return false;
+  }
+}
+
+// Progreso hacia un objetivo (para mostrarlo)
+export function objectiveValue(o, res) {
+  const s = res.stats, m = res.metrics, r = res.ratings;
+  switch (o.k) {
+    case 'speed': return Math.round(s.maxV * 3.6) + ' km/h';
+    case 'inv': return s.inversions;
+    case 'air': return s.airtime.toFixed(1).replace('.', ',') + ' s';
+    case 'exc': return r.excitement.toFixed(1).replace('.', ',');
+    case 'lat': return s.maxLat.toFixed(2).replace('.', ',') + ' G';
+    case 'vert': return s.maxVert.toFixed(1).replace('.', ',') + ' G';
+    case 'nausea': return r.nausea.toFixed(1).replace('.', ',');
+    case 'turn': return m.turn + '°';
+    case 'height': return Math.round(m.maxY) + ' m';
+    default: return '';
+  }
+}

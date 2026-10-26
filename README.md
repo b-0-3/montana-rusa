@@ -1,59 +1,57 @@
-# AGÁRRATE · El juego de la montaña rusa
+# AGÁRRATE · Constructor de montañas rusas 3D
 
-Juego para el navegador (pensado para el móvil en horizontal): dibujas la vía con el dedo, pulsas **¡PROBAR!** y el vagón tiene que llegar a la meta cogiendo las estrellas… sin que los pasajeros vomiten.
+Juego para el navegador (pensado para el móvil en horizontal). Construyes tu montaña rusa en 3D **pieza a pieza** y luego te montas en primera persona.
 
-Vanilla JS, sin frameworks, sin dependencias y sin paso de compilación. Se publica tal cual en GitHub Pages.
+Hecho con JavaScript sin frameworks + [Three.js](https://threejs.org) (incluido en `lib/`, no hace falta instalar nada). Se publica tal cual en GitHub Pages.
 
 ## Cómo se juega
 
-- ✏️ **Vía**: arrastra el dedo para dibujar. Empieza en el círculo verde de la salida. Si un trazo empieza o acaba cerca de otro, se unen solos con una curva suave.
-- ⚡ **Turbo** (desde el nivel 5): empuja el vagón en la dirección en la que lo dibujas. Gasta el doble de vía.
-- 🧽 **Borrar**: toca un trozo de vía para quitarlo. ↶ deshace el último.
-- ⭐ Hay 3 estrellas por nivel. Se pueden coger también volando.
-- 🤢 Si una curva es muy cerrada a mucha velocidad, las fuerzas G suben, el medidor de **susto** se llena y los pasajeros vomitan (pierdes).
-- 💥 Si la vía se acaba, el vagón sale volando. Para aterrizar bien, la vía de abajo tiene que ir en la misma dirección en la que cae.
+- 🧩 **Piezas**: recta, curva amplia y cerrada (izquierda/derecha), subir, bajar, looping, tirabuzón (izquierda/derecha), turbo, frenos y meta. Cada pieza encaja perfecta al final de la vía: no hay zigzags.
+- ⛓️ **Cadena**: interruptor. Con ella activada, las piezas que pongas suben el tren solas.
+- 📐 **Peralte**: inclina la vía. En **AUTO** el juego simula el tren, mira a qué velocidad llegará a la curva y le pone la inclinación justa para que no haya fuerza lateral. También puedes elegir 0°, 30° o 60° a cada lado.
+- 🔴 Si una pieza no cabe (se mete en el suelo, choca con otra parte de la vía o con un árbol), te la enseña en rojo y te dice por qué.
+- 🚀 Arriba ves la longitud, la altura y a qué velocidad llegará el tren al final de lo que llevas construido.
+- ▶ **MONTAR**: cámara en primera fila, detrás del tren o libre (🎥). Medidores de velocidad, G vertical, G lateral y "susto".
+- 🤢 Si las fuerzas G se pasan (curvas sin peralte, loopings demasiado rápidos, bajadas que acaban de golpe) los pasajeros vomitan.
+- 📊 Al terminar: notas de **emoción, intensidad y mareo** (0–10) y estadísticas.
 
-En ordenador: `Espacio` probar/parar, `Ctrl+Z` deshacer, `1` `2` `3` herramientas, `Esc` salir.
+### Modos
 
-El progreso (estrellas, niveles desbloqueados y la vía que has dibujado en cada nivel) se guarda en el navegador.
+- **Retos**: 8 niveles con 3 objetivos cada uno (velocidad, vueltas boca abajo, airtime, fuerzas G, emoción, presupuesto de piezas, bosque con árboles…).
+- **Modo libre**: construye lo que quieras. Guarda tu récord de emoción y puedes cambiar el color de la vía.
+
+Todo (vías, estrellas, récords) se guarda en el navegador.
 
 ## Estructura
 
 ```
-index.html        pantallas (menú, niveles, HUD, ventanas)
+index.html        pantallas y HUD
 css/style.css     estilos
-js/engine.js      motor: suavizado de trazos, uniones, física del vagón (sin DOM, se puede probar en Node)
-js/levels.js      los 10 niveles
-js/render.js      dibujado en canvas (fondos, vías, vagón, estrellas, obstáculos)
-js/audio.js       sonidos sintetizados con Web Audio (no hay archivos de audio)
-js/game.js        pantallas, controles táctiles, partida, guardado
-icons/            iconos para "Añadir a pantalla de inicio"
-manifest.json     para instalarlo como app
+js/track.js       piezas, peralte, choques (sin dependencias, se puede probar en Node)
+js/physics.js     física del tren, fuerzas G medidas en el pecho del pasajero, notas
+js/levels.js      retos y objetivos
+js/scene.js       todo lo 3D (Three.js): vías, soportes, estaciones, tren, cámaras
+js/audio.js       sonidos sintetizados (sin archivos de audio)
+js/main.js        menús, construcción, viaje, resultados, guardado
+lib/              Three.js y OrbitControls
 ```
 
-## Añadir un nivel
+## Añadir un reto
 
-Copia uno de `js/levels.js` y cambia los números. El mundo mide 1600 × 900 y el suelo está en `y = 860` (la `y` crece hacia abajo).
+En `js/levels.js`:
 
 ```js
 {
-  name: 'Mi nivel',
-  hint: 'Texto de ayuda que sale al empezar',
-  theme: 'day',                 // 'day' | 'sunset' | 'night'
-  start: [[30, 250], [250, 250]],  // estación de salida
-  goal: [[1320, 640], [1560, 640]], // meta
-  startSpeed: 160,              // velocidad con la que sale el vagón
-  budget: 2000,                 // vía disponible (40 = 1 metro)
-  stars: [[520, 400], [860, 560], [1160, 630]],
-  obstacles: [
-    { type: 'rock', shape: 'rect', x: 720, y: 330, w: 140, h: 530 }, // roca: no se construye y se choca
-    { type: 'zone', shape: 'rect', x: 640, y: 0, w: 260, h: 860 },   // zona roja: no se construye, se puede saltar
-    { type: 'rock', shape: 'circle', x: 640, y: 560, r: 90 }
-  ]
+  name: 'Mi reto',
+  intro: 'Texto que sale al empezar',
+  tip: 'Pista',
+  budget: 20,                                   // opcional: máximo de piezas
+  obstacles: [{ x: 0, z: 70, r: 5, h: 18 }],    // opcional: árboles (x, z, radio, altura)
+  objectives: [{ k: 'speed', v: 100 }, { k: 'inv', v: 2 }, { k: 'exc', v: 6 }]
 }
 ```
 
-Ajustes de física (gravedad, rozamiento, potencia del turbo, límite de G…) arriba del todo en `js/engine.js`.
+Tipos de objetivo: `finish`, `speed` (km/h), `inv` (vueltas), `air` (segundos), `exc` (emoción), `lat` / `vert` (G máximas), `nausea`, `turn` (grados), `height` (metros).
 
 ## Probar en local
 
@@ -61,4 +59,4 @@ Ajustes de física (gravedad, rozamiento, potencia del turbo, límite de G…) a
 python3 -m http.server
 ```
 
-y abre `http://localhost:8000`.
+y abre `http://localhost:8000`. Con `?ts=5` en la URL el viaje va 5 veces más rápido (útil para probar).

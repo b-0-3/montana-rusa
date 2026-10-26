@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-  <title>AGÁRRATE · El juego de la montaña rusa</title>
-  <meta name="description" content="Dibuja la vía con el dedo y lleva el vagón hasta la meta. Un juego de montañas rusas para el móvil.">
+  <title>AGÁRRATE · Constructor de montañas rusas 3D</title>
+  <meta name="description" content="Construye tu montaña rusa en 3D pieza a pieza (loopings, tirabuzones, peralte, turbo) y móntate en primera persona.">
   <meta name="theme-color" content="#1e2433">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
@@ -17,101 +17,113 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Lilita+One&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <script type="importmap">{ "imports": { "three": "./lib/three.module.min.js" } }</script>
 </head>
 <body>
   <canvas id="c"></canvas>
-  <div id="safe-probe"></div>
+  <div id="vignette"></div>
+
+  <!-- ============ CARGANDO ============ -->
+  <div id="loading"><div class="logo small">AGÁRRATE</div><p>Montando el parque…</p></div>
 
   <!-- ============ MENÚ ============ -->
-  <section id="scr-menu" class="screen">
+  <section id="scr-menu" class="screen hidden">
     <div class="menu-card">
-      <h1 class="logo">AGÁRRATE<span>el juego de la montaña rusa</span></h1>
-      <p class="tagline">Dibuja la vía con el dedo. Lleva el vagón hasta la meta, coge las estrellas… y que nadie vomite.</p>
-      <button id="btn-play" class="btn big go">▶ Jugar</button>
+      <h1 class="logo">AGÁRRATE<span>constructor de montañas rusas 3D</span></h1>
+      <div class="menu-buttons">
+        <button class="btn big go" data-act="levels">🏆 Retos</button>
+        <button class="btn big gold" data-act="free">🎨 Modo libre</button>
+      </div>
       <div class="menu-row">
-        <button class="btn small" data-act="mute"><span class="ico-sound">🔊</span> Sonido</button>
         <button class="btn small" data-act="howto">❓ Cómo se juega</button>
+        <button class="btn small" data-act="mute"><span class="ico-sound">🔊</span> Sonido</button>
       </div>
     </div>
   </section>
 
-  <!-- ============ NIVELES ============ -->
+  <!-- ============ RETOS ============ -->
   <section id="scr-levels" class="screen hidden">
     <div class="levels-wrap">
       <header class="levels-head">
         <button class="btn icon" data-act="menu" aria-label="Volver">←</button>
-        <h2>Elige nivel</h2>
-        <div class="pill">⭐ <b id="total-stars">0</b> / <span id="max-stars">30</span></div>
+        <h2>Retos</h2>
+        <div class="pill">⭐ <b id="total-stars">0</b> / <span id="max-stars">24</span></div>
       </header>
       <div id="level-grid"></div>
     </div>
   </section>
 
-  <!-- ============ HUD DEL JUEGO ============ -->
-  <section id="hud" class="hidden">
-    <div id="rail-left" class="rail">
-      <div id="tools" class="rail-group">
-        <button class="tool active" data-tool="track"><span>✏️</span><small>Vía</small></button>
-        <button class="tool" data-tool="boost" id="tool-boost"><span>⚡</span><small>Turbo</small></button>
-        <button class="tool" data-tool="erase"><span>🧽</span><small>Borrar</small></button>
-        <div class="sep"></div>
-        <button class="tool plain" data-act="undo"><span>↶</span><small>Deshacer</small></button>
-        <button class="tool plain" data-act="clear"><span>🗑️</span><small>Todo</small></button>
-      </div>
-      <div id="gauges" class="rail-group hidden">
-        <div class="gauge">
-          <b id="g-speed">0</b><small>km/h</small>
-        </div>
-        <div class="gauge">
-          <div class="vbar"><i id="g-gbar"></i><em></em></div>
-          <small id="g-gval">1.0 G</small>
-        </div>
-        <div class="gauge">
-          <span id="g-face">😀</span>
-          <div class="vbar susto"><i id="g-susto"></i></div>
-          <small>susto</small>
-        </div>
-      </div>
+  <!-- ============ CONSTRUIR ============ -->
+  <section id="hud-build" class="hud hidden">
+    <div class="top-left">
+      <button class="chip-btn" data-act="menu" aria-label="Menú">☰</button>
+      <button class="chip" id="lvl-chip" data-act="objectives"></button>
+    </div>
+    <div class="top-center"><div class="chip stats" id="stats"></div></div>
+    <div class="top-right">
+      <button class="chip-btn" data-act="undo" title="Deshacer">↶</button>
+      <button class="chip-btn" data-act="clear" title="Borrar todo">🗑️</button>
+      <button class="chip-btn" data-act="center" title="Centrar cámara">🎯</button>
+      <button class="chip-btn" data-act="color" id="btn-color" title="Color de la vía">🎨</button>
+      <button class="chip-btn" data-act="mute"><span class="ico-sound">🔊</span></button>
     </div>
 
-    <div id="rail-right" class="rail">
-      <div class="rail-group">
-        <button class="tool plain" data-act="levels"><span>☰</span><small>Niveles</small></button>
-        <button class="tool plain" data-act="hint"><span>💡</span><small>Pista</small></button>
-        <button class="tool plain" data-act="mute"><span class="ico-sound">🔊</span><small>Sonido</small></button>
-      </div>
-      <button id="btn-run" class="run-btn"><span>▶</span><small>¡PROBAR!</small></button>
+    <div id="bank-panel">
+      <div class="panel-title">Peralte</div>
+      <button class="bank active" data-bank="auto"><b>AUTO</b></button>
+      <button class="bank" data-bank="-60"></button>
+      <button class="bank" data-bank="-30"></button>
+      <button class="bank" data-bank="0"></button>
+      <button class="bank" data-bank="30"></button>
+      <button class="bank" data-bank="60"></button>
     </div>
 
-    <div id="topinfo">
-      <div class="lvl-name"><b id="lvl-num">1</b><span id="lvl-title">Primer viaje</span></div>
-      <div class="budget">
-        <div class="bar"><i id="budget-fill"></i><i id="budget-prev"></i></div>
-        <span id="budget-text">Te quedan 50 m de vía</span>
-      </div>
-      <div class="stars-live" id="stars-live"><i>★</i><i>★</i><i>★</i></div>
-    </div>
+    <div id="palette"></div>
 
-    <div id="toast"></div>
+    <button id="btn-ride" class="ride-btn"><span>▶</span><small>¡MONTAR!</small></button>
   </section>
 
-  <!-- ============ VENTANA EMERGENTE ============ -->
-  <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
-    <div class="card" id="modal-card"></div>
-  </div>
+  <!-- ============ MONTAR ============ -->
+  <section id="hud-ride" class="hud hidden">
+    <div class="gauges">
+      <div class="gauge"><b id="g-speed">0</b><small>km/h</small></div>
+      <div class="gauge">
+        <div class="vbar"><i id="g-vert"></i><em class="lim-hi"></em><em class="lim-lo"></em><em class="one"></em></div>
+        <small id="g-vert-t">1,0 G</small><small class="lbl">vertical</small>
+      </div>
+      <div class="gauge">
+        <div class="hbar"><i id="g-lat"></i><em></em></div>
+        <small id="g-lat-t">0,0 G</small><small class="lbl">lateral</small>
+      </div>
+    </div>
+    <div class="ride-top">
+      <div class="chip susto"><span id="g-face">😀</span><div class="sbar"><i id="g-susto"></i></div></div>
+      <div class="chip counters"><span>🔄 <b id="c-inv">0</b></span><span>🪶 <b id="c-air">0,0</b> s</span></div>
+    </div>
+    <div class="ride-right">
+      <button class="chip-btn big" data-act="cam" id="btn-cam">🎥</button>
+      <button class="ride-btn stop" data-act="stop"><span>■</span><small>PARAR</small></button>
+    </div>
+    <div id="pop"></div>
+  </section>
 
-  <!-- ============ GIRA EL MÓVIL ============ -->
+  <div id="toast"></div>
+
+  <!-- ============ VENTANA ============ -->
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true"><div class="card" id="modal-card"></div></div>
+
   <div id="rotate" class="hidden">
     <div class="rotate-phone">📱</div>
     <h3>Gira el móvil</h3>
     <p>Se juega mucho mejor en horizontal.</p>
-    <button class="btn small" data-act="ignore-rotate">Jugar en vertical igualmente</button>
+    <button class="btn small" data-act="ignore-rotate">Seguir en vertical</button>
   </div>
 
-  <script src="js/engine.js"></script>
-  <script src="js/levels.js"></script>
-  <script src="js/audio.js"></script>
-  <script src="js/render.js"></script>
-  <script src="js/game.js"></script>
+  <div id="webgl-error" class="hidden">
+    <h3>Tu navegador no puede mostrar 3D</h3>
+    <p>Prueba con Safari o Chrome actualizados.</p>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>
